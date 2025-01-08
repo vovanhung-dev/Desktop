@@ -1,8 +1,10 @@
-const { app, BrowserWindow, session, ipcMain, desktopCapturer } = require('electron');
+const { app, BrowserWindow, session, ipcMain, desktopCapturer, nativeImage } = require('electron');
 const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
+const fetch = require('node-fetch');
+const FormData = require('form-data');
 
 let mainWindow;
 let lockWindow;
@@ -10,6 +12,8 @@ let blockedGames = []; // Mảng để lưu danh sách game bị chặn
 let historyInterval = null;
 let userId = null;
 let countdown = 10; // 10 giây
+let captureInterval = null;
+const DEFAULT_CAPTURE_INTERVAL = 30000; // 30 giây mặc định
 
 // Đọc danh sách game bị chặn từ file
 const loadBlockedGames = () => {
@@ -201,14 +205,18 @@ app.on('ready', () => {
         console.log('Received user login with ID:', loggedInUserId);
         userId = loggedInUserId;
         
-        // Bắt đầu interval để t� động lấy lịch sử
+        // Bắt đầu interval để tự động lấy lịch sử
         if (!historyInterval) {
             console.log('Starting history interval...');
-            // Chạy lần đầu ngay khi đăng nhập
             autoFetchAndSendHistory();
-            
-            // Sau đó cứ 1 giây gọi một lần để đếm ngược
             historyInterval = setInterval(autoFetchAndSendHistory, 1000);
+        }
+
+        // Bắt đầu chụp màn hình tự động
+        if (!captureInterval) {
+            console.log('Starting screenshot capture...');
+            captureAndSaveScreen(); // Chụp lần đầu ngay lập tức
+            captureInterval = setInterval(captureAndSaveScreen, DEFAULT_CAPTURE_INTERVAL);
         }
     });
 });
@@ -399,7 +407,7 @@ const copyFile = (source, destination) => {
     });
 };
 
-// Hàm để mở cửa sổ khóa
+// Hàm đểể mở cửa sổ khóa
 function createLockWindow() {
     lockWindow = new BrowserWindow({
         width: 400,
@@ -469,7 +477,106 @@ app.on('window-all-closed', () => {
         clearInterval(historyInterval);
         historyInterval = null;
     }
+    if (captureInterval) {
+        clearInterval(captureInterval);
+        captureInterval = null;
+    }
     if (process.platform !== 'darwin') {
         app.quit();
     }
 });
+
+// Thêm API để thay đổi interval từ giao diện screenshot
+ipcMain.on('set-capture-interval', (event, interval) => {
+    if (captureInterval) {
+        clearInterval(captureInterval);
+    }
+    captureInterval = setInterval(captureAndSaveScreen, interval * 1000);
+    console.log(`Screenshot interval set to ${interval} seconds`);
+});
+
+// Thêm hàm để chụp màn hình
+async function captureAndSaveScreen() {
+    try {
+        const sources = await desktopCapturer.getSources({ 
+            types: ['screen'],
+            thumbnailSize: { width: 1920, height: 1080 }
+        });
+        
+        const mainSource = sources[0]; // Lấy màn hình chính
+        if (!mainSource || !mainSource.thumbnail) {
+            throw new Error('No screen source found');
+        }
+
+        // Lấy buffer của hình ảnh
+        const imageBuffer = mainSource.thumbnail.toPNG();
+        
+        // Upload ảnh
+        await uploadScreenshot(imageBuffer);
+        
+    } catch (error) {
+        console.error('Error capturing screen:', error);
+    }
+}
+
+// Sửa lại hàm upload ảnh chụp màn hình
+async function uploadScreenshot(imageBuffer) {
+    if (!userId) return;
+
+    try {
+        // Lấy thông tin user từ main window
+        const userStr = await mainWindow.webContents.executeJavaScript('localStorage.getItem("user")');
+        if (!userStr) return;
+        
+        const user = JSON.parse(userStr);
+        
+        // Tạo form data
+        const form = new FormData();
+        form.append('file', imageBuffer, {
+            filename: 'screenshot.png',
+            contentType: 'image/png'
+        });
+        form.append('email', user.email || 'user@example.com');
+
+        // Gửi request
+        const response = await fetch('http://localhost:3100/api/upload', {
+            method: 'POST',
+            body: form,
+            headers: form.getHeaders()
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            console.log('Screenshot uploaded successfully');
+            await saveScreenshotInfo(result.data.url);
+        }
+    } catch (error) {
+        console.error('Error uploading screenshot:', error);
+    }
+}
+
+// Hàm lưu thông tin ảnh vào database
+async function saveScreenshotInfo(imagePath) {
+    const imageInfo = {
+        path: imagePath,
+        date_taken: new Date().toISOString().slice(0, 19).replace('T', ' '),
+        user_id: userId
+    };
+
+    try {
+        const response = await fetch('http://localhost:3100/api/images', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(imageInfo)
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            console.log('Screenshot info saved successfully');
+        }
+    } catch (error) {
+        console.error('Error saving screenshot info:', error);
+    }
+}
