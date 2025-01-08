@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>Lập Lịch Khóa Mạng</title>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Header -->
+    <header class="bg-blue-600 text-white py-8 shadow-lg">
+        <div class="container mx-auto text-center">
+            <h1 class="text-4xl font-bold">Lập Lịch Khóa Mạng</h1>
+            <p class="mt-2 text-xl">Chọn thời gian để khóa mạng.</p>
+        </div>
+    </header>
+
+    <!-- Nội dung chính -->
+    <div class="container mx-auto mt-8 px-4">
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <label for="lockTime" class="block text-lg text-gray-700 mb-2">Chọn thời gian khóa mạng:</label>
+            <input type="datetime-local" id="lockTime" class="mt-1 block w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+
+        <div class="mb-6 text-center">
+            <button onclick="scheduleNetworkLock()" class="bg-blue-600 text-white py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <i class="fas fa-clock mr-2"></i> Lập lịch khóa mạng
+            </button>
+        </div>
+
+        <div id="message" class="text-lg text-green-600 text-center mb-8"></div>
+
+        <div class="mb-6 text-center">
+            <button onclick="goBack()" class="bg-gray-600 text-white py-3 px-6 rounded-lg shadow-md hover:bg-gray-700 transition-all focus:outline-none focus:ring-2 focus:ring-gray-500">
+                <i class="fas fa-arrow-left mr-2"></i> Quay lại
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function scheduleNetworkLock() {
+            const lockTime = document.getElementById('lockTime').value;
+            if (lockTime) {
+                // Gửi thời gian khóa mạng đến main.js
+                window.electron.ipcRenderer.send('schedule-network-lock', lockTime);
+                document.getElementById('message').textContent = `Mạng sẽ được khóa vào lúc ${lockTime}.`;
+            } else {
+                alert('Vui lòng chọn thời gian khóa mạng.');
+            }
+        }
+
+        // Hàm quay lại
+        function goBack() {
+            window.location.href = '../index/index.html'; // Quay lại trang index
+        }
+    </script>
+
+</body>
+</html> 

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>Login - Kidsafe</title>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-md w-96">
+        <h2 class="text-2xl font-bold text-center mb-6">Đăng Nhập</h2>
+        <form id="loginForm">
+            <div class="mb-4">
+                <label for="username" class="block text-gray-700">Tên đăng nhập</label>
+                <input type="text" id="username" class="border border-gray-300 p-2 w-full rounded" required>
+            </div>
+            <div class="mb-4">
+                <label for="password" class="block text-gray-700">Mật khẩu</label>
+                <input type="password" id="password" class="border border-gray-300 p-2 w-full rounded" required>
+            </div>
+            <button type="submit" class="bg-blue-500 text-white p-2 rounded w-full">Đăng Nhập</button>
+        </form>
+    </div>
+    <script type="module" src="login.js"></script>
+</body>
+</html> 

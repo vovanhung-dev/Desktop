@@ -1,0 +1,99 @@
+Minecraft,block
+Fortnite,allow
+Call of Duty,block
+Among Us,allow
+League of Legends,block
+Counter-Strike: Global Offensive,allow
+Apex Legends,block
+Roblox,allow
+Valorant,block
+Genshin Impact,allow
+World of Warcraft,block
+Dota 2,allow
+PUBG,block
+Overwatch,allow
+FIFA 22,block
+The Sims 4,allow
+Cyberpunk 2077,block
+Assassin's Creed Valhalla,allow
+Red Dead Redemption 2,block
+Hades,allow
+Stardew Valley,block
+Terraria,allow
+ARK: Survival Evolved,block
+Fall Guys,allow
+Rocket League,block
+Dead by Daylight,allow
+Monster Hunter: World,block
+Ghost of Tsushima,allow
+Sekiro: Shadows Die Twice,block
+Dark Souls III,allow
+Elden Ring,block
+Final Fantasy XIV,allow
+Destiny 2,block
+Borderlands 3,allow
+The Witcher 3: Wild Hunt,block
+Hitman 3,allow
+CyberConnect2,block
+Nioh 2,allow
+Forza Horizon 5,block
+Gran Turismo 7,allow
+Need for Speed Heat,block
+Watch Dogs: Legion,allow
+Far Cry 6,block
+Assassin's Creed Odyssey,allow
+Tomb Raider,block
+Hitman,allow
+Dishonored 2,block
+Control,allow
+Death Stranding,block
+Half-Life: Alyx,allow
+Resident Evil Village,block
+The Last of Us Part II,allow
+God of War,block
+Spider-Man: Miles Morales,allow
+Demon's Souls,block
+Bloodborne,allow
+Sekiro,block
+Dark Souls II,allow
+Dark Souls,block
+The Elder Scrolls V: Skyrim,allow
+Fallout 4,block
+Dishonored,allow
+Bioshock Infinite,block
+The Outer Worlds,allow
+CyberConnect2,block
+Monster Hunter Rise,allow
+Ghost Recon Breakpoint,block
+Watch Dogs 2,allow
+Battlefield V,block
+Call of Duty: Warzone,allow
+Star Wars Jedi: Fallen Order,block
+Mortal Kombat 11,allow
+Street Fighter V,block
+Tekken 7,allow
+Soulcalibur VI,block
+Dragon Ball FighterZ,allow
+Guilty Gear Strive,block
+Overcooked! 2,allow
+Cuphead,block
+Hollow Knight,allow
+Celeste,block
+Hades,allow
+Undertale,block
+Stardew Valley,allow
+Terraria,block
+Factorio,allow
+Oxygen Not Included,block
+Slay the Spire,allow
+Hollow Knight,block
+Dead Cells,allow
+The Binding of Isaac: Rebirth,block
+Cuphead,allow
+Hades,block
+Celeste,allow
+Stardew Valley,block
+Terraria,allow
+Factorio,block
+Oxygen Not Included,allow
+Slay the Spire,block

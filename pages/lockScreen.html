@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>Mở Khóa Máy Tính</title>
+</head>
+<body class="bg-gray-800 flex items-center justify-center h-screen">
+    <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+        <h2 class="text-2xl font-bold mb-4">Nhập Mật Khẩu Để Mở Khóa</h2>
+        <input type="password" id="password" class="border border-gray-300 p-2 rounded w-full mb-4" placeholder="Mật khẩu" />
+        <button onclick="unlock()" class="bg-blue-600 text-white py-2 px-4 rounded">Mở Khóa</button>
+    </div>
+
+    <script>
+        function unlock() {
+            const password = document.getElementById('password').value;
+            if (password === '123456') {
+                window.close(); // Đóng cửa sổ khóa
+            } else {
+                alert('Mật khẩu không đúng!');
+            }
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>Quản lý Chụp Màn Hình</title>
+    <style>
+        body {
+            background-color: #ffffff; /* Màu nền sáng mặc định */
+            color: #000000; /* Màu chữ tối mặc định */
+            transition: background-color 0.3s, color 0.3s; /* Hiệu ứng chuyển đổi */
+        }
+        .dark-mode {
+            background-color: #1a202c; /* Màu nền tối */
+            color: #f7fafc; /* Màu chữ sáng */
+        }
+        .image-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+        }
+        .image-item img {
+            width: 100%;
+            height: 150px; /* Đặt chiều cao cố định */
+            object-fit: cover; /* Đảm bảo hình ảnh không bị méo */
+            transition: transform 0.3s;
+        }
+        .image-item:hover img {
+            transform: scale(1.05); /* Phóng to hình ảnh khi hover */
+        }
+        /* Modal */
+        .modal {
+            display: none; /* Ẩn modal mặc định */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal img {
+            max-width: 90%;
+            max-height: 90%;
+        }
+        /* Phân trang */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        .pagination button {
+            background-color: #2d3748; /* Màu nền cho nút */
+            color: #f7fafc; /* Màu chữ cho nút */
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            margin: 0 0.25rem;
+            transition: background-color 0.3s;
+        }
+        .pagination button:hover {
+            background-color: #4a5568; /* Màu nền khi hover */
+        }
+    </style>
+</head>
+<body>
+    <header class="bg-gray-800 p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-white">Quản lý Chụp Màn Hình</h1>
+            <div class="flex items-center">
+                <button onclick="goBack()" class="bg-gray-500 text-white p-2 rounded">
+                    Quay về
+                </button>
+                <button onclick="toggleDarkMode()" class="bg-gray-500 text-white p-2 rounded ml-2">
+                    Chuyển đổi chế độ
+                </button>
+                <button onclick="loadUserImages()" class="bg-blue-500 text-white p-2 rounded flex items-center ml-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h18M3 12h18M3 21h18" />
+                    </svg>
+                    Cập nhật danh sách hình ảnh
+                </button>
+            </div>
+        </div>
+    </header>
+    <div class="container mx-auto mt-10">
+        <div class="text-center">
+            <div class="mt-4">
+                <label for="intervalInput" class="mr-2">Thời gian chụp (giây):</label>
+                <select id="intervalInput" class="border p-1 rounded" onchange="setCaptureInterval()">
+                    <option value="60">60 giây</option>
+                    <option value="30">30 giây</option>
+                    <option value="15">15 giây</option>
+                    <option value="5">5 giây</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="container mx-auto mt-10">
+        <h2 class="text-xl font-bold mb-4">Danh sách ảnh đã chụp:</h2>
+        <div id="imageList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4"></div> <!-- Hiển thị 8 ảnh trong 1 hàng -->
+        <div id="pagination" class="pagination"></div> <!-- Phần tử phân trang -->
+    </div>
+
+    <!-- Modal để hiển thị ảnh lớn -->
+    <div id="modal" class="modal">
+        <img id="modalImage" src="" alt="Ảnh lớn" />
+    </div>
+
+    <script>
+        let captureInterval;
+        let currentPage = 1;
+        const itemsPerPage = 20; // Số lượng ảnh mỗi trang
+        let allImages = []; // Lưu trữ tất cả hình ảnh
+
+        window.onload = function() {
+            const savedInterval = localStorage.getItem('captureInterval');
+            if (savedInterval) {
+                document.getElementById('intervalInput').value = savedInterval;
+                setCaptureInterval();
+            }
+            loadUserImages();
+        };
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode'); // Thay đổi lớp cho chế độ tối
+        }
+
+        function goBack() {
+            window.location.href = '../index/index.html';
+        }
+
+        async function loadUserImages() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const userId = user ? user.id : null;
+            if (!userId) {
+                alert('Không tìm thấy thông tin người dùng trong local storage.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3100/api/images/user/${userId}`);
+                const result = await response.json();
+                if (result.success) {
+                    allImages = result.data; // Lưu trữ tất cả hình ảnh
+                    displayImages(currentPage); // Hiển thị hình ảnh cho trang hiện tại
+                    setupPagination(); // Thiết lập phân trang
+                } else {
+                    console.error('Lấy danh sách ảnh thất bại:', result.message);
+                }
+            } catch (error) {
+                console.error('Lỗi khi lấy danh sách ảnh:', error);
+            }
+        }
+
+        function displayImages(page) {
+            const imageList = document.getElementById('imageList');
+            imageList.innerHTML = '';
+
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const imagesToDisplay = allImages.slice(start, end); // Lấy hình ảnh cho trang hiện tại
+
+            imagesToDisplay.forEach(image => {
+                const imageItem = document.createElement('div');
+                imageItem.className = 'image-item';
+                imageItem.onclick = () => showModal(image.path); // Thêm sự kiện click để hiển thị modal
+
+                const imgElement = document.createElement('img');
+                imgElement.src = image.path;
+                imgElement.alt = 'Ảnh chụp màn hình';
+
+                imageItem.appendChild(imgElement);
+                imageList.appendChild(imageItem);
+            });
+        }
+
+        function setupPagination() {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = ''; // Xóa nội dung cũ
+
+            const totalPages = Math.ceil(allImages.length / itemsPerPage);
+            for (let i = 1; i <= totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.innerText = i;
+                pageButton.className = 'bg-gray-300 text-black p-2 rounded mx-1';
+                pageButton.onclick = () => {
+                    currentPage = i;
+                    displayImages(currentPage);
+                };
+                pagination.appendChild(pageButton);
+            }
+        }
+
+        function showModal(imagePath) {
+            const modal = document.getElementById('modal');
+            const modalImage = document.getElementById('modalImage');
+            modalImage.src = imagePath; // Đặt đường dẫn ảnh vào modal
+            modal.style.display = 'flex'; // Hiển thị modal
+        }
+
+        // Đóng modal khi nhấp vào ảnh
+        document.getElementById('modal').onclick = () => {
+            document.getElementById('modal').style.display = 'none'; // Ẩn modal
+        };
+
+        async function uploadImage(imageData) {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const email = user ? user.email : null;
+            const userId = user ? user.id : null;
+            if (!email || !userId) {
+                alert('Không tìm thấy thông tin người dùng trong local storage.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', imageData, 'screenshot.png');
+            formData.append('email', email);
+
+            try {
+                const response = await fetch('http://localhost:3100/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    console.log('Tải lên thành công! URL: ' + result.data.url);
+                    await saveImageInfo(result.data.url, userId);
+                } else {
+                    console.log('Tải lên thất bại: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error uploading image:', error);
+                alert('Đã xảy ra lỗi khi tải lên hình ảnh.');
+            }
+        }
+
+        async function saveImageInfo(path, userId) {
+            const dateTaken = new Date();
+            const formattedDate = dateTaken.toISOString().slice(0, 19).replace('T', ' ');
+
+            const imageInfo = {
+                path: path,
+                date_taken: formattedDate,
+                user_id: userId
+            };
+
+            try {
+                const response = await fetch('http://localhost:3100/api/images', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(imageInfo)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    console.log('Thông tin ảnh đã được lưu thành công:', result);
+                } else {
+                    console.error('Lưu thông tin ảnh thất bại:', result.message);
+                }
+            } catch (error) {
+                console.error('Lỗi khi lưu thông tin ảnh:', error);
+            }
+        }
+
+        async function captureScreen() {
+            try {
+                const sources = await window.electron.ipcRenderer.invoke('capture-screen');
+                const screenSource = sources[0];
+
+                const video = document.createElement('video');
+                video.srcObject = await navigator.mediaDevices.getUserMedia({
+                    audio: false,
+                    video: {
+                        mandatory: {
+                            chromeMediaSource: 'desktop',
+                            chromeMediaSourceId: screenSource.id,
+                            minWidth: 1280,
+                            maxWidth: 1920,
+                            minHeight: 720,
+                            maxHeight: 1080,
+                        },
+                    },
+                });
+
+                video.onloadedmetadata = () => {
+                    video.play();
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                    canvas.toBlob(async (blob) => {
+                        await uploadImage(blob);
+                    });
+
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                };
+            } catch (error) {
+                console.error('Lỗi khi chụp màn hình:', error);
+            }
+        }
+
+        function setCaptureInterval() {
+            const intervalInput = document.getElementById('intervalInput');
+            const interval = parseInt(intervalInput.value) * 1000;
+
+            if (captureInterval) {
+                clearInterval(captureInterval);
+            }
+
+            captureInterval = setInterval(captureScreen, interval);
+            localStorage.setItem('captureInterval', intervalInput.value);
+            console.log(`Bắt đầu chụp ảnh mỗi ${intervalInput.value} giây.`);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>Quản lý Truy Cập Web</title>
+</head>
+<body class="bg-gray-50">
+
+    <!-- Header -->
+    <header class="bg-blue-600 text-white py-6 shadow-lg">
+        <div class="container mx-auto text-center">
+            <h1 class="text-4xl font-bold">Quản lý Truy Cập Web</h1>
+            <p class="mt-2 text-lg">Quản lý các trang web được phép truy cập và xem lịch sử duyệt web của bạn.</p>
+        </div>
+    </header>
+
+    <!-- Nội dung chính -->
+    <div class="container mx-auto mt-8 px-4">
+        <!-- Tab chọn trình duyệt -->
+        <div class="flex justify-center mb-6">
+            <button id="chromeTab" class="tab-button bg-blue-600 text-white py-2 px-4 rounded-l-lg focus:outline-none" onclick="setBrowser('chrome')">Chrome</button>
+            <button id="edgeTab" class="tab-button bg-gray-300 text-gray-800 py-2 px-4 rounded-r-lg focus:outline-none" onclick="setBrowser('edge')">Edge</button>
+        </div>
+
+        <!-- Quay lại -->
+        <div class="text-left mb-6">
+            <button onclick="goBack()" class="bg-blue-600 text-white py-3 px-6 rounded-lg shadow hover:bg-blue-700 transition-all">
+                Quay lại
+            </button>
+        </div>
+
+        <!-- Lịch sử truy cập -->
+        <div id="webHistory">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Lịch sử truy cập web</h2>
+
+            <!-- Danh sách lịch sử -->
+            <div id="historyList" class="space-y-4"></div>
+
+            <!-- Phân trang -->
+            <div class="flex justify-center mt-8">
+                <button id="prevBtn" onclick="changePage('prev')" class="bg-blue-600 text-white py-2 px-6 rounded-l-lg shadow hover:bg-blue-700 transition-all disabled:opacity-50">
+                    Trang trước
+                </button>
+                <button id="nextBtn" onclick="changePage('next')" class="bg-blue-600 text-white py-2 px-6 rounded-r-lg shadow hover:bg-blue-700 transition-all">
+                    Trang sau
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        const itemsPerPage = 10;  // Hiển thị 10 mục mỗi trang
+        let currentBrowser = 'chrome'; // Trình duyệt mặc định
+        let userId = null;
+
+        function goBack() {
+            window.location.href = '../index/index.html';
+        }
+
+        function setBrowser(browser) {
+            currentBrowser = browser;
+            currentPage = 1; // Reset trang về 1 khi đổi trình duyệt
+            document.getElementById('chromeTab').classList.toggle('bg-blue-600', browser === 'chrome');
+            document.getElementById('chromeTab').classList.toggle('bg-gray-300', browser !== 'chrome');
+            document.getElementById('edgeTab').classList.toggle('bg-blue-600', browser === 'edge');
+            document.getElementById('edgeTab').classList.toggle('bg-gray-300', browser !== 'edge');
+            getWebHistory(currentPage); // Lấy lịch sử cho trình duyệt đã chọn
+        }
+
+        function getUserFromLocalStorage() {
+            const userStr = localStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                return user.id;
+            }
+            return null;
+        }
+
+        async function getWebHistory(page = 1) {
+            try {
+                if (!userId) {
+                    userId = getUserFromLocalStorage();
+                    if (!userId) {
+                        console.error('User not found in localStorage');
+                        return;
+                    }
+                }
+
+                const history = await window.electron.getHistory(currentBrowser);
+                console.log(history);
+
+                try {
+                    const response = await fetch('http://localhost:3100/api/web-history', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            user_id: userId,
+                            browser_type: currentBrowser,
+                            history: history
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to save history');
+                    }
+                    
+                    console.log('History saved successfully');
+                } catch (error) {
+                    console.error('Error saving history:', error);
+                }
+
+                const totalItems = history.length;
+                const startIndex = (page - 1) * itemsPerPage;
+                const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+
+                const paginatedHistory = history.slice(startIndex, endIndex);
+                const historyList = document.getElementById('historyList');
+                historyList.innerHTML = '';
+
+                paginatedHistory.forEach((entry, index) => {
+                    const listItem = document.createElement('div');
+                    listItem.classList.add('bg-white', 'p-4', 'rounded-lg', 'shadow-md', 'flex', 'items-center', 'space-x-4');
+                    listItem.innerHTML = `
+                        <div class="text-gray-600 font-bold">${startIndex + index + 1}.</div>
+                        <div class="flex-1">
+                            <p class="text-gray-800 font-semibold">${entry.title}</p>
+                            <p class="text-gray-600">
+                                ${entry.url.length > 30 ? '<span class="hover:underline cursor-pointer" onclick="window.open(\'' + entry.url + '\', \'_blank\')">Click xem link</span>' : '<a href="' + entry.url + '" target="_blank" class="hover:underline">' + entry.url + '</a>'}
+                            </p>
+                            <p class="text-sm text-gray-500">Lần truy cập: ${new Date(entry.date).toLocaleString('vi-VN')}</p>
+                        </div>
+                    `;
+                    historyList.appendChild(listItem);
+                });
+
+                togglePaginationButtons(totalItems);
+            } catch (err) {
+                console.error('Error fetching history:', err);
+            }
+        }
+
+        function changePage(direction) {
+            if (direction === 'prev' && currentPage > 1) {
+                currentPage--;
+            } else if (direction === 'next') {
+                currentPage++;
+            }
+            getWebHistory(currentPage); // Lấy lại lịch sử cho trang mới
+        }
+
+        // Ẩn/Hiện nút phân trang nếu không còn dữ liệu
+        function togglePaginationButtons(recordsLength) {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            if (recordsLength <= itemsPerPage) {
+                nextBtn.disabled = true;
+            } else {
+                nextBtn.disabled = false;
+            }
+            prevBtn.disabled = currentPage === 1;
+        }
+
+        getWebHistory(currentPage); // Lấy lịch sử ban đầu
+    </script>
+
+</body>
+</html>
