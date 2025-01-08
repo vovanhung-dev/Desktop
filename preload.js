@@ -12,5 +12,12 @@ contextBridge.exposeInMainWorld('electron', {
         } else if (browser === 'edge') {
             return ipcRenderer.invoke('get-edge-history');
         }
+    },
+    send: (channel, data) => {
+        // whitelist channels
+        let validChannels = ['user-logged-in'];
+        if (validChannels.includes(channel)) {
+            ipcRenderer.send(channel, data);
+        }
     }
 });

@@ -7,6 +7,9 @@ const sqlite3 = require('sqlite3').verbose();
 let mainWindow;
 let lockWindow;
 let blockedGames = []; // Mảng để lưu danh sách game bị chặn
+let historyInterval = null;
+let userId = null;
+let countdown = 10; // 10 giây
 
 // Đọc danh sách game bị chặn từ file
 const loadBlockedGames = () => {
@@ -191,6 +194,22 @@ app.on('ready', () => {
                 console.log('Mạng đã được mở lại.');
             }
         });
+    });
+
+    // Trong phần ipcMain, thêm handler để nhận userId khi đăng nhập thành công
+    ipcMain.on('user-logged-in', (event, loggedInUserId) => {
+        console.log('Received user login with ID:', loggedInUserId);
+        userId = loggedInUserId;
+        
+        // Bắt đầu interval để t� động lấy lịch sử
+        if (!historyInterval) {
+            console.log('Starting history interval...');
+            // Chạy lần đầu ngay khi đăng nhập
+            autoFetchAndSendHistory();
+            
+            // Sau đó cứ 1 giây gọi một lần để đếm ngược
+            historyInterval = setInterval(autoFetchAndSendHistory, 1000);
+        }
     });
 });
 
@@ -395,3 +414,62 @@ function createLockWindow() {
 
     lockWindow.loadFile('pages/lockScreen.html');
 }
+
+// Thêm hàm để gửi lịch sử lên server
+async function sendHistoryToServer(browser, history, userId) {
+    try {
+        const response = await fetch('http://localhost:3100/api/web-history', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                user_id: userId,
+                browser_type: browser,
+                history: history
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to save history');
+        }
+        console.log(`${browser} history saved successfully`);
+    } catch (error) {
+        console.error(`Error saving ${browser} history:`, error);
+    }
+}
+
+// Thêm hàm để tự động lấy và gửi lịch sử
+async function autoFetchAndSendHistory() {
+    try {
+        countdown--;
+        if (countdown < 0) {
+            countdown = 10; // Reset lại đếm ngược
+            
+            // Lấy lịch sử Chrome
+            const chromeHistory = await getChromeHistory();
+            if (chromeHistory) {
+                await sendHistoryToServer('chrome', chromeHistory, userId);
+            }
+
+            // Lấy lịch sử Edge
+            const edgeHistory = await getEdgeHistory();
+            if (edgeHistory) {
+                await sendHistoryToServer('edge', edgeHistory, userId);
+            }
+        }
+    } catch (error) {
+        console.error('Error in auto fetch history:', error);
+    }
+}
+
+// Thêm cleanup khi app đóng
+app.on('window-all-closed', () => {
+    if (historyInterval) {
+        clearInterval(historyInterval);
+        historyInterval = null;
+    }
+    if (process.platform !== 'darwin') {
+        app.quit();
+    }
+});

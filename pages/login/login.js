@@ -30,6 +30,8 @@ document.getElementById('loginForm').addEventListener('submit', function(event) 
             // Store user information
             localStorage.setItem('user', JSON.stringify(data.data.user));
             localStorage.setItem('avatar', data.data.user.image);
+            // Gửi userId đến main process
+            window.electron.send('user-logged-in', data.data.user.id); // Added line to send userId
             // Load the main interface
             window.location.href = '../index/index.html';
         } else {

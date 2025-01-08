@@ -22,5 +22,9 @@
         </form>
     </div>
     <script type="module" src="login.js"></script>
+    <script>
+        // Sau khi đăng nhập thành công và nhận được userId
+        window.electron.send('user-logged-in', userId);
+    </script>
 </body>
 </html> 
