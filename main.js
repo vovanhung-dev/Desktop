@@ -426,7 +426,7 @@ function createLockWindow() {
 // Thêm hàm để gửi lịch sử lên server
 async function sendHistoryToServer(browser, history, userId) {
     try {
-        const response = await fetch('http://localhost:3100/api/web-history', {
+        const response = await fetch('https://backend-production-311e.up.railway.app/api/web-history', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -539,7 +539,7 @@ async function uploadScreenshot(imageBuffer) {
         form.append('email', user.email || 'user@example.com');
 
         // Gửi request
-        const response = await fetch('http://localhost:3100/api/upload', {
+        const response = await fetch('https://backend-production-311e.up.railway.app/api/upload', {
             method: 'POST',
             body: form,
             headers: form.getHeaders()
@@ -564,7 +564,7 @@ async function saveScreenshotInfo(imagePath) {
     };
 
     try {
-        const response = await fetch('http://localhost:3100/api/images', {
+        const response = await fetch('https://backend-production-311e.up.railway.app/api/images', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
