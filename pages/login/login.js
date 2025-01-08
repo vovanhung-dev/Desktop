@@ -1,15 +1,5 @@
 import API_BASE_URL from '../../apis/apiConfig.js';
 
-// Kiểm tra localStorage khi trang đăng nhập được tải
-window.onload = function() {
-    const user = localStorage.getItem('user');
-    if (user) {
-        window.electron.send('user-logged-in', user.id); // Added line to send userId
-
-        // Nếu có user, chuyển đến giao diện chính
-        window.location.href = '../index/index.html';
-    }
-};
 
 document.getElementById('loginForm').addEventListener('submit', function(event) {
     event.preventDefault(); // Prevent the default form submission
