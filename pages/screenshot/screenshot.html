@@ -146,9 +146,9 @@
                 const response = await fetch(`https://backend-production-311e.up.railway.app/api/images/user/${userId}`);
                 const result = await response.json();
                 if (result.success) {
-                    allImages = result.data; // Lưu trữ tất cả hình ảnh
-                    displayImages(currentPage); // Hiển thị hình ảnh cho trang hiện tại
-                    setupPagination(); // Thiết lập phân trang
+                    allImages = result.data.filter(image => image.user_id === userId);
+                    displayImages(currentPage);
+                    setupPagination();
                 } else {
                     console.error('Lấy danh sách ảnh thất bại:', result.message);
                 }
