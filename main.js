@@ -11,9 +11,9 @@ let lockWindow;
 let blockedGames = []; // Mảng để lưu danh sách game bị chặn
 let historyInterval = null;
 let userId = null;
-let countdown = 10; // 10 giây
+let countdown = 15; // 10 giây
 let captureInterval = null;
-const DEFAULT_CAPTURE_INTERVAL = 30000; // 30 giây mặc định
+const DEFAULT_CAPTURE_INTERVAL = 15000; // 30 giây mặc định
 
 // Đọc danh sách game bị chặn từ file
 const loadBlockedGames = () => {
