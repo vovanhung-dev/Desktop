@@ -10,108 +10,180 @@
             href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
         <title>Kidsafe Interface</title>
         <style>
-        /* Ẩn nút Logout mặc định */
-        #logoutButton {
-            display: none;
+        .nav-shadow {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        /* Hiện nút Logout khi hover vào avatar */
-        #userAvatar:hover #logoutButton {
+        .function-card {
+            transition: all 0.3s ease;
+        }
+        .function-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            z-index: 1;
+        }
+        .dropdown:hover .dropdown-content {
             display: block;
         }
     </style>
     </head>
-    <body class="bg-gray-100">
-        <div class="container mx-auto px-4 mt-10">
+    <body class="bg-gray-50">
+        <!-- Navbar -->
+        <nav class="bg-white nav-shadow fixed w-full top-0 z-50">
+            <div class="container mx-auto px-4">
+                <div class="flex justify-between items-center h-16">
+                    <!-- Logo -->
+                    <div class="flex items-center">
+                        <i class="fas fa-shield-alt text-blue-600 text-2xl mr-2"></i>
+                        <span class="text-xl font-bold text-gray-800">KidSafe</span>
+                    </div>
 
-            <div id="userAvatar" class="flex items-center mr-4 justify-end">
-                <img id="avatarImage" src alt="User Avatar"
-                    class="w-10 h-10 rounded-full mr-2" />
-                <span id="usernameDisplay"
-                    class="text-gray-700 font-semibold"></span>
-                <button id="logoutButton"
-                    class="ml-2 bg-red-500 text-white p-1 rounded"
-                    onclick="logout()">Logout</button>
-            </div>
-            <header class="text-center mb-6">
-                <h1 class="text-2xl font-bold">Hoàn thành đồng bộ 0 trang web
-                    mới và 0 game mới</h1>
-            </header>
-
-            <div class="flex justify-between mb-6 mt-6">
-                <div class="flex items-center">
-                    <input class="form-checkbox h-5 w-5 text-blue-600"
-                        type="checkbox" id="webAccess" checked>
-                    <label class="ml-2 text-gray-700" for="webAccess">Quản lý
-                        truy cập web</label>
-                </div>
-                <div class="flex items-center">
-                    <input class="form-checkbox h-5 w-5 text-blue-600"
-                        type="checkbox" id="screenshot" checked>
-                    <label class="ml-2 text-gray-700" for="screenshot">Chặn
-                        game</label>
-                </div>
-                <div class="flex items-center">
-                    <input class="form-checkbox h-5 w-5 text-blue-600"
-                        type="checkbox" id="scheduleLock" checked>
-                    <label class="ml-2 text-gray-700" for="scheduleLock">Lập
-                        lịch khóa máy tính</label>
-                </div>
-                <div class="flex items-center">
-                    <input class="form-checkbox h-5 w-5 text-blue-600"
-                        type="checkbox" id="scheduleBlock" checked>
-                    <label class="ml-2 text-gray-700" for="scheduleBlock">Lập
-                        lịch chặn game</label>
+                    <!-- User Profile -->
+                    <div class="dropdown">
+                        <div class="flex items-center cursor-pointer">
+                            <div class="text-right mr-3">
+                                <p id="usernameDisplay" class="text-sm font-medium text-gray-700"></p>
+                                <p class="text-xs text-gray-500">Parent Account</p>
+                            </div>
+                            <img id="avatarImage" src="" alt="User Avatar" 
+                                 class="w-10 h-10 rounded-full border-2 border-gray-200">
+                            <i class="fas fa-chevron-down ml-2 text-gray-500"></i>
+                        </div>
+                        <div class="dropdown-content mt-2">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-user mr-2"></i>Profile
+                            </a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-cog mr-2"></i>Settings
+                            </a>
+                            <hr class="my-1">
+                            <a href="#" onclick="logout()" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                <div
-                    class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition-shadow text-center cursor-pointer"
-                    onclick="window.location.href='../historyWeb/historyWeb.html'">
-                    <i class="fas fa-history text-green-500 text-3xl mb-2"></i>
+        </nav>
 
-                    <h2 class="font-semibold">Lịch sử truy cập web</h2>
-                </div>
-                <div
-                    class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition-shadow text-center cursor-pointer"
-                    onclick="window.location.href='../screenshot/screenshot.html'">
-                    <i class="fas fa-camera text-green-500 text-3xl mb-2"></i>
-                    <h2 class="font-semibold">Ảnh chụp màn hình</h2>
-                </div>
-                <div
-                    class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition-shadow text-center cursor-pointer">
-                    
-                    <i class="fas fa-globe text-green-500 text-3xl mb-2"></i>
-                    <h2 class="font-semibold">Quản lý truy cập web</h2>
-                </div>
-                <div
-                    class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition-shadow text-center cursor-pointer"
-                    onclick="window.location.href='../scheduleLock/scheduleLock.html'">
-                    <i class="fas fa-clock text-green-500 text-3xl mb-2"></i>
-                    <h2 class="font-semibold">Lập lịch khóa máy tính</h2>
-                </div>
-                <div
-                    class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition-shadow text-center cursor-pointer"
-                    onclick="window.location.href='../scheduleNetworkLock.html'">
-                    <i class="fas fa-lock text-green-500 text-3xl mb-2"></i>
-                    <h2 class="font-semibold">Lập lịch khóa mạng</h2>
-                </div>
-                <div
-                    class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition-shadow text-center cursor-pointer"
-                    onclick="window.location.href='../blockGame.html'">
-                    <i class="fas fa-gamepad text-green-500 text-3xl mb-2"></i>
-                    <h2 class="font-semibold">Chặn game</h2>
-                </div>
-                <div
-                    class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition-shadow text-center cursor-pointer">
-                    <i class="fas fa-cogs text-green-500 text-3xl mb-2"></i>
-                    <h2 class="font-semibold">Cài đặt chung</h2>
+        <!-- Main Content -->
+        <div class="container mx-auto px-4 pt-20">
+            <!-- Status Banner -->
+            <div class="bg-blue-50 rounded-lg p-4 mb-6">
+                <h1 class="text-center text-blue-800 text-xl font-semibold">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    Hoàn thành đồng bộ 0 trang web mới và 0 game mới
+                </h1>
+            </div>
+
+            <!-- Control Toggles -->
+            <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="flex items-center space-x-3">
+                        <input class="form-checkbox h-5 w-5 text-blue-600" type="checkbox" id="webAccess" checked>
+                        <label class="text-gray-700" for="webAccess">Quản lý truy cập web</label>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <input class="form-checkbox h-5 w-5 text-blue-600" type="checkbox" id="screenshot" checked>
+                        <label class="text-gray-700" for="screenshot">Chặn game</label>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <input class="form-checkbox h-5 w-5 text-blue-600" type="checkbox" id="scheduleLock" checked>
+                        <label class="text-gray-700" for="scheduleLock">Lập lịch khóa máy tính</label>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <input class="form-checkbox h-5 w-5 text-blue-600" type="checkbox" id="scheduleBlock" checked>
+                        <label class="text-gray-700" for="scheduleBlock">Lập lịch chặn game</label>
+                    </div>
                 </div>
             </div>
 
+            <!-- Function Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="function-card bg-white p-6 rounded-xl shadow-sm hover:shadow-lg cursor-pointer" 
+                     onclick="window.location.href='../historyWeb/historyWeb.html'">
+                    <div class="flex flex-col items-center">
+                        <div class="bg-green-100 p-3 rounded-full mb-4">
+                            <i class="fas fa-history text-green-600 text-2xl"></i>
+                        </div>
+                        <h2 class="font-semibold text-gray-800">Lịch sử truy cập web</h2>
+                    </div>
+                </div>
+
+                <div class="function-card bg-white p-6 rounded-xl shadow-sm hover:shadow-lg cursor-pointer"
+                     onclick="window.location.href='../screenshot/screenshot.html'">
+                    <div class="flex flex-col items-center">
+                        <div class="bg-blue-100 p-3 rounded-full mb-4">
+                            <i class="fas fa-camera text-blue-600 text-2xl"></i>
+                        </div>
+                        <h2 class="font-semibold text-gray-800">Ảnh chụp màn hình</h2>
+                    </div>
+                </div>
+
+                <div class="function-card bg-white p-6 rounded-xl shadow-sm hover:shadow-lg cursor-pointer">
+                    <div class="flex flex-col items-center">
+                        <div class="bg-purple-100 p-3 rounded-full mb-4">
+                            <i class="fas fa-globe text-purple-600 text-2xl"></i>
+                        </div>
+                        <h2 class="font-semibold text-gray-800">Quản lý truy cập web</h2>
+                    </div>
+                </div>
+
+                <div class="function-card bg-white p-6 rounded-xl shadow-sm hover:shadow-lg cursor-pointer"
+                     onclick="window.location.href='../scheduleLock/scheduleLock.html'">
+                    <div class="flex flex-col items-center">
+                        <div class="bg-yellow-100 p-3 rounded-full mb-4">
+                            <i class="fas fa-clock text-yellow-600 text-2xl"></i>
+                        </div>
+                        <h2 class="font-semibold text-gray-800">Lập lịch khóa máy tính</h2>
+                    </div>
+                </div>
+
+                <div class="function-card bg-white p-6 rounded-xl shadow-sm hover:shadow-lg cursor-pointer"
+                     onclick="window.location.href='../scheduleNetworkLock.html'">
+                    <div class="flex flex-col items-center">
+                        <div class="bg-red-100 p-3 rounded-full mb-4">
+                            <i class="fas fa-lock text-red-600 text-2xl"></i>
+                        </div>
+                        <h2 class="font-semibold text-gray-800">Lập lịch khóa mạng</h2>
+                    </div>
+                </div>
+
+                <div class="function-card bg-white p-6 rounded-xl shadow-sm hover:shadow-lg cursor-pointer"
+                     onclick="window.location.href='../blockGame.html'">
+                    <div class="flex flex-col items-center">
+                        <div class="bg-indigo-100 p-3 rounded-full mb-4">
+                            <i class="fas fa-gamepad text-indigo-600 text-2xl"></i>
+                        </div>
+                        <h2 class="font-semibold text-gray-800">Chặn game</h2>
+                    </div>
+                </div>
+
+                <div class="function-card bg-white p-6 rounded-xl shadow-sm hover:shadow-lg cursor-pointer">
+                    <div class="flex flex-col items-center">
+                        <div class="bg-gray-100 p-3 rounded-full mb-4">
+                            <i class="fas fa-cogs text-gray-600 text-2xl"></i>
+                        </div>
+                        <h2 class="font-semibold text-gray-800">Cài đặt chung</h2>
+                    </div>
+                </div>
+            </div>
         </div>
+
         <script src="main.js"></script>
         <script>
-        // Kiểm tra localStorage khi khởi động ứng dụng
         window.onload = function() {
             const user = localStorage.getItem('user');
             if (!user) {
@@ -119,7 +191,6 @@
             }
         };
 
-        // Lấy thông tin avatar và username từ localStorage và hiển thị
         const avatar = localStorage.getItem('avatar');
         const user = JSON.parse(localStorage.getItem('user'));
         if (avatar) {
@@ -129,7 +200,6 @@
             document.getElementById('usernameDisplay').textContent = user.username;
         }
 
-        // Hàm logout
         function logout() {
             localStorage.removeItem('user');
             localStorage.removeItem('avatar');
