@@ -5,6 +5,7 @@ const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
 const fetch = require('node-fetch');
 const FormData = require('form-data');
+const HostBlocker = require('./hostBlocker');
 
 let mainWindow;
 let lockWindow;
@@ -14,6 +15,7 @@ let userId = null;
 let countdown = 15; // 10 giây
 let captureInterval = null;
 const DEFAULT_CAPTURE_INTERVAL = 15000; // 30 giây mặc định
+const hostBlocker = new HostBlocker();
 
 // Đọc danh sách game bị chặn từ file
 const loadBlockedGames = () => {
@@ -201,9 +203,12 @@ app.on('ready', () => {
     });
 
     // Trong phần ipcMain, thêm handler để nhận userId khi đăng nhập thành công
-    ipcMain.on('user-logged-in', (event, loggedInUserId) => {
+    ipcMain.on('user-logged-in', async (event, loggedInUserId) => {
         console.log('Received user login with ID:', loggedInUserId);
         userId = loggedInUserId;
+        
+        // Khởi tạo chặn website
+        await hostBlocker.loadBlockedSites(loggedInUserId);
         
         // Bắt đầu interval để tự động lấy lịch sử
         if (!historyInterval) {
@@ -217,6 +222,13 @@ app.on('ready', () => {
             console.log('Starting screenshot capture...');
             captureAndSaveScreen(); // Chụp lần đầu ngay lập tức
             captureInterval = setInterval(captureAndSaveScreen, DEFAULT_CAPTURE_INTERVAL);
+        }
+    });
+
+    // Thêm listener để cập nhật danh sách chặn
+    ipcMain.on('update-blocked-sites', async () => {
+        if (userId) {
+            await hostBlocker.loadBlockedSites(userId);
         }
     });
 });

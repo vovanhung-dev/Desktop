@@ -239,6 +239,7 @@
                 if (response.success) {
                     await loadWebAccess();
                     document.getElementById('accessForm').reset();
+                    window.electron.send('update-blocked-sites');
                 }
             } catch (error) {
                 console.error('Lỗi khi thêm website:', error);
@@ -252,6 +253,7 @@
                 
                 if (response.success) {
                     await loadWebAccess();
+                    window.electron.send('update-blocked-sites');
                 }
             } catch (error) {
                 console.error('Lỗi khi thay đổi trạng thái:', error);
@@ -265,6 +267,7 @@
                     
                     if (response.success) {
                         await loadWebAccess();
+                        window.electron.send('update-blocked-sites');
                     }
                 } catch (error) {
                     console.error('Lỗi khi xóa website:', error);
