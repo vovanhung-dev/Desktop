@@ -20,27 +20,76 @@ const hostBlocker = new HostBlocker();
 // Thêm biến để lưu interval load blocked sites
 let loadBlockedSitesInterval = null;
 
-// Đọc danh sách game bị chặn từ file
-const loadBlockedGames = () => {
-    const filePath = path.join(__dirname, 'blockedGames.txt');
-    fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading blocked games file:', err);
+// Thêm biến để lưu interval load blocked games
+let loadBlockedGamesInterval = null;
+
+// Thêm vào phần khai báo biến
+let processHistoryInterval = null;
+
+// Sửa lại hàm loadBlockedGames để lấy dữ liệu từ API
+const loadBlockedGames = async () => {
+    try {
+        if (!userId) return;
+
+        // Lấy danh sách game bị chặn của user hiện tại
+        const currentUserResponse = await fetch(`https://backend-production-311e.up.railway.app/api/game-blocks/user/${userId}`);
+        const currentUserResult = await currentUserResponse.json();
+
+        // Lấy danh sách game bị chặn của user mặc định (ID: 1)
+        const defaultUserResponse = await fetch(`https://backend-production-311e.up.railway.app/api/game-blocks/user/1`);
+        const defaultUserResult = await defaultUserResponse.json();
+
+        // Kết hợp hai danh sách và loại bỏ các game trùng lặp
+        let combinedGames = [];
+        
+        if (currentUserResult.success) {
+            combinedGames = [...currentUserResult.data];
+        }
+        
+        if (defaultUserResult.success) {
+            defaultUserResult.data.forEach(defaultGame => {
+                const isDuplicate = combinedGames.some(
+                    game => game.game_name.toLowerCase() === defaultGame.game_name.toLowerCase()
+                );
+                if (!isDuplicate) {
+                    combinedGames.push(defaultGame);
+                }
+            });
+        }
+
+        // Cập nhật danh sách game bị chặn
+        blockedGames = combinedGames
+            .filter(game => game.status === 'active')
+            .map(game => game.game_name);
+
+        console.log('Danh sách game bị chặn đã được cập nhật:', blockedGames);
+
+        // Kiểm tra và đóng các game đang chạy
+        checkAndKillBlockedGames();
+    } catch (error) {
+        console.error('Error loading blocked games:', error);
+    }
+};
+
+// Thêm hàm để kiểm tra và đóng các game đang chạy
+const checkAndKillBlockedGames = () => {
+    exec('tasklist', (error, stdout, stderr) => {
+        if (error) {
+            console.error('Error fetching task list:', error);
             return;
         }
 
-        const lines = data.split('\n');
-        lines.forEach(line => {
-            const [gameName, status] = line.split(',');
-            if (status.trim() === 'block') {
-                blockedGames.push(gameName.trim());
+        blockedGames.forEach(gameName => {
+            if (stdout.toLowerCase().includes(gameName.toLowerCase())) {
+                exec(`taskkill /F /IM "${gameName}.exe"`, (err) => {
+                    if (err) {
+                        console.error(`Không thể chặn game "${gameName}": ${err.message}`);
+                    } else {
+                        console.log(`Game "${gameName}" đã bị chặn.`);
+                    }
+                });
             }
         });
-        console.log('Danh sách game bị chặn:', blockedGames);
-        // Gửi danh sách game bị chặn đến trang blockGame.html
-        if (mainWindow) {
-            mainWindow.webContents.send('update-blocked-games', blockedGames);
-        }
     });
 };
 
@@ -225,6 +274,20 @@ app.on('ready', () => {
             console.log('Starting screenshot capture...');
             captureAndSaveScreen(); // Chụp lần đầu ngay lập tức
             captureInterval = setInterval(captureAndSaveScreen, DEFAULT_CAPTURE_INTERVAL);
+        }
+
+        // Bắt đầu interval để tự động load blocked games
+        if (!loadBlockedGamesInterval) {
+            console.log('Starting load blocked games interval...');
+            loadBlockedGames(); // Gọi lần đầu ngay lập tức
+            loadBlockedGamesInterval = setInterval(loadBlockedGames, 15000); // 15 giây
+        }
+
+        // Bắt đầu interval để gửi thông tin tiến trình
+        if (!processHistoryInterval) {
+            console.log('Starting process history interval...');
+            sendProcessHistory(); // Gửi lần đầu ngay lập tức
+            processHistoryInterval = setInterval(sendProcessHistory, 15000); // 15 giây
         }
     });
 
@@ -493,6 +556,48 @@ async function autoFetchAndSendHistory() {
     }
 }
 
+// Thêm hàm để gửi thông tin tiến trình
+const sendProcessHistory = () => {
+    exec('tasklist', async (error, stdout, stderr) => {
+        if (error) {
+            console.error('Error fetching task list:', error);
+            return;
+        }
+
+        try {
+            const processes = stdout.split('\n')
+                .slice(3) // Bỏ qua 3 dòng đầu tiên
+                .map(process => {
+                    const processInfo = process.trim().split(/\s+/);
+                    if (processInfo.length > 0) {
+                        return {
+                            name: processInfo[0],
+                            pid: processInfo[1],
+                            memoryUsage: processInfo[4]
+                        };
+                    }
+                })
+                .filter(Boolean); // Lọc bỏ các giá trị undefined/null
+
+            // Gửi dữ liệu lên server
+            await fetch('https://backend-production-311e.up.railway.app/api/process-history', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    user_id: userId,
+                    processes: processes
+                })
+            });
+
+            console.log('Process history updated successfully');
+        } catch (error) {
+            console.error('Error sending process history:', error);
+        }
+    });
+};
+
 // Thêm cleanup khi app đóng
 app.on('window-all-closed', () => {
     if (historyInterval) {
@@ -502,6 +607,14 @@ app.on('window-all-closed', () => {
     if (captureInterval) {
         clearInterval(captureInterval);
         captureInterval = null;
+    }
+    if (loadBlockedGamesInterval) {
+        clearInterval(loadBlockedGamesInterval);
+        loadBlockedGamesInterval = null;
+    }
+    if (processHistoryInterval) {
+        clearInterval(processHistoryInterval);
+        processHistoryInterval = null;
     }
     if (process.platform !== 'darwin') {
         app.quit();
