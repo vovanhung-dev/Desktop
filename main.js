@@ -26,7 +26,10 @@ let loadBlockedGamesInterval = null;
 // Thêm vào phần khai báo biến
 let processHistoryInterval = null;
 
-// Sửa lại hàm loadBlockedGames để lấy dữ liệu từ API
+// Thêm biến để theo dõi các game đang bị chặn
+let currentlyBlockedGames = new Set();
+
+// Sửa lại hàm loadBlockedGames
 const loadBlockedGames = async () => {
     try {
         if (!userId) return;
@@ -57,10 +60,25 @@ const loadBlockedGames = async () => {
             });
         }
 
-        // Cập nhật danh sách game bị chặn
-        blockedGames = combinedGames
-            .filter(game => game.status === 'active')
-            .map(game => game.game_name);
+        // Lấy danh sách game đang bị chặn mới
+        const newBlockedGames = new Set(
+            combinedGames
+                .filter(game => game.status === 'active')
+                .map(game => game.game_name.toLowerCase())
+        );
+
+        // Tìm các game cần gỡ chặn (có trong currentlyBlockedGames nhưng không có trong newBlockedGames)
+        const gamesToUnblock = [...currentlyBlockedGames].filter(game => !newBlockedGames.has(game));
+
+        // Gỡ chặn các game không còn trong danh sách
+        gamesToUnblock.forEach(gameName => {
+            console.log(`Gỡ chặn game: ${gameName}`);
+            currentlyBlockedGames.delete(gameName);
+        });
+
+        // Cập nhật danh sách game đang bị chặn
+        blockedGames = [...newBlockedGames];
+        currentlyBlockedGames = newBlockedGames;
 
         console.log('Danh sách game bị chặn đã được cập nhật:', blockedGames);
 
@@ -71,7 +89,7 @@ const loadBlockedGames = async () => {
     }
 };
 
-// Thêm hàm để kiểm tra và đóng các game đang chạy
+// Sửa lại hàm checkAndKillBlockedGames
 const checkAndKillBlockedGames = () => {
     exec('tasklist', (error, stdout, stderr) => {
         if (error) {
@@ -79,9 +97,13 @@ const checkAndKillBlockedGames = () => {
             return;
         }
 
+        const runningProcesses = stdout.toLowerCase();
+        
+        // Kiểm tra từng game trong danh sách bị chặn
         blockedGames.forEach(gameName => {
-            if (stdout.toLowerCase().includes(gameName.toLowerCase())) {
-                exec(`taskkill /F /IM "${gameName}.exe"`, (err) => {
+            const gameExe = `${gameName.toLowerCase()}.exe`;
+            if (runningProcesses.includes(gameExe)) {
+                exec(`taskkill /F /IM "${gameExe}"`, (err) => {
                     if (err) {
                         console.error(`Không thể chặn game "${gameName}": ${err.message}`);
                     } else {
