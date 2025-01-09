@@ -4,26 +4,67 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <title>Login - Kidsafe</title>
 </head>
-<body class="bg-gray-100 flex items-center justify-center h-screen">
-    <div class="bg-white p-8 rounded-lg shadow-md w-96">
-        <h2 class="text-2xl font-bold text-center mb-6">Đăng Nhập</h2>
-        <form id="loginForm">
-            <div class="mb-4">
-                <label for="username" class="block text-gray-700">Tên đăng nhập</label>
-                <input type="text" id="username" class="border border-gray-300 p-2 w-full rounded" required>
+<body class="bg-gradient-to-r from-blue-500 to-purple-600 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-white rounded-xl shadow-2xl overflow-hidden">
+        <!-- Logo và Header -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8 text-white text-center">
+            <h1 class="text-3xl font-bold mb-2">KidSafe</h1>
+            <p class="text-blue-100">Bảo vệ con em của bạn trên không gian mạng</p>
+        </div>
+
+        <!-- Form đăng nhập -->
+        <div class="p-8">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-8">Đăng Nhập</h2>
+            <form id="loginForm" class="space-y-6">
+                <div class="relative">
+                    <label for="username" class="text-sm font-medium text-gray-700 block mb-2">
+                        Tên đăng nhập
+                    </label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-3 text-gray-400">
+                            <i class="fas fa-user"></i>
+                        </span>
+                        <input type="text" id="username" 
+                            class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                            required>
+                    </div>
+                </div>
+
+                <div class="relative">
+                    <label for="password" class="text-sm font-medium text-gray-700 block mb-2">
+                        Mật khẩu
+                    </label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-3 text-gray-400">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                        <input type="password" id="password" 
+                            class="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                            required>
+                    </div>
+                </div>
+
+
+                <button type="submit" 
+                    class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-lg hover:opacity-90 transition-opacity font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Đăng Nhập
+                </button>
+            </form>
+
+            <div class="mt-6 text-center text-sm text-gray-600">
+                Chưa có tài khoản? 
+                <a href="https://kidsafe-saoviet.vercel.app/index-2.html" class="text-blue-600 hover:text-blue-800 font-medium transition-colors" target="_blank">
+                    Đăng ký ngay
+                </a>
             </div>
-            <div class="mb-4">
-                <label for="password" class="block text-gray-700">Mật khẩu</label>
-                <input type="password" id="password" class="border border-gray-300 p-2 w-full rounded" required>
-            </div>
-            <button type="submit" class="bg-blue-500 text-white p-2 rounded w-full">Đăng Nhập</button>
-        </form>
+        </div>
     </div>
+
     <script type="module" src="login.js"></script>
     <script>
-        // Sau khi đăng nhập thành công và nhận được userId
         window.electron.send('user-logged-in', userId);
     </script>
 </body>
