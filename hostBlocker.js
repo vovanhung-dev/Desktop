@@ -117,7 +117,7 @@ ipconfig /flushdns
             await fs.writeFile(psScriptPath, psScript, 'utf8');
 
             // Thực thi PowerShell script với quyền admin
-            const command = `powershell -ExecutionPolicy Bypass -Command "Start-Process powershell -ArgumentList '-ExecutionPolicy Bypass -File "${psScriptPath}"' -Verb RunAs -Wait"`;
+            const command = `powershell -ExecutionPolicy Bypass -File "${psScriptPath}"`;
             await execAsync(command);
 
             // Xóa script sau khi thực thi

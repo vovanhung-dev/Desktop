@@ -17,6 +17,9 @@ let captureInterval = null;
 const DEFAULT_CAPTURE_INTERVAL = 15000; // 30 giây mặc định
 const hostBlocker = new HostBlocker();
 
+// Thêm biến để lưu interval load blocked sites
+let loadBlockedSitesInterval = null;
+
 // Đọc danh sách game bị chặn từ file
 const loadBlockedGames = () => {
     const filePath = path.join(__dirname, 'blockedGames.txt');
@@ -231,6 +234,13 @@ app.on('ready', () => {
             await hostBlocker.loadBlockedSites(userId);
         }
     });
+
+    // Bắt đầu interval để tự động load blocked sites
+    if (!loadBlockedSitesInterval) {
+        console.log('Starting load blocked sites interval...');
+        loadBlockedSites(); // Gọi lần đầu ngay lập tức
+        loadBlockedSitesInterval = setInterval(loadBlockedSites, 15000); // 15 giây
+    }
 });
 
 // Đọc lịch sử từ tệp lịch sử của Chrome
@@ -590,5 +600,13 @@ async function saveScreenshotInfo(imagePath) {
         }
     } catch (error) {
         console.error('Error saving screenshot info:', error);
+    }
+}
+
+// Hàm để load blocked sites
+async function loadBlockedSites() {
+    if (userId) {
+        await hostBlocker.loadBlockedSites(userId);
+        console.log('Blocked sites loaded for user ID:', userId);
     }
 }
