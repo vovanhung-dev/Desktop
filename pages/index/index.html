@@ -82,10 +82,14 @@
         <div class="container mx-auto px-4 pt-20">
             <!-- Status Banner -->
             <div class="bg-blue-50 rounded-lg p-4 mb-6">
-                <h1 class="text-center text-blue-800 text-xl font-semibold">
+                <h1 class="text-center text-blue-800 text-xl font-semibold mb-2">
                     <i class="fas fa-sync-alt mr-2"></i>
                     Hoàn thành đồng bộ 0 trang web mới và 0 game mới
                 </h1>
+                <div class="text-center text-blue-700">
+                    <i class="fas fa-map-marker-alt mr-2"></i>
+                    <span id="currentAddress">Đang lấy vị trí...</span>
+                </div>
             </div>
 
             <!-- Control Toggles -->
@@ -190,7 +194,87 @@
             if (!user) {
                 window.location.href = 'login.html';
             }
+            
+            startLocationTracking();
         };
+
+        // Thêm API key của ipgeolocation.io
+        const IPGEO_API_KEY = '786c27bfdb8949208c30e4801c461de6'; // Thay thế bằng API key của bạn
+
+        async function getCurrentLocation() {
+            document.getElementById('currentAddress').textContent = 'Đang lấy vị trí...';
+            
+            try {
+                // Sử dụng ipgeolocation.io API
+                const response = await fetch(`https://api.ipgeolocation.io/ipgeo?apiKey=${IPGEO_API_KEY}&lang=vi`);
+                const data = await response.json();
+                
+                if (data.latitude && data.longitude) {
+                    console.log('Vị trí từ IPGeolocation:', data);
+                    
+                    // Tạo địa chỉ chi tiết
+                    const address = [
+                        data.city,
+                        data.state_prov,
+                        data.country_name
+                    ].filter(Boolean).join(', ');
+                    
+                    document.getElementById('currentAddress').textContent = address;
+
+                    // Lưu vị trí lên server
+                    const user = JSON.parse(localStorage.getItem('user'));
+                    if (user && user.id) {
+                        await fetch('https://backend-production-311e.up.railway.app/api/locations', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                user_id: user.id,
+                                address: address,
+                                latitude: data.latitude,
+                                longitude: data.longitude
+                            })
+                        });
+                    }
+                    
+                    // Log thông tin chi tiết
+                    console.log('Thông tin vị trí:', {
+                        coordinates: `${data.latitude}, ${data.longitude}`,
+                        ip: data.ip,
+                        isp: data.isp,
+                        city: data.city,
+                        district: data.district,
+                        state: data.state_prov,
+                        country: data.country_name,
+                        timezone: data.time_zone.name
+                    });
+                } else {
+                    throw new Error('Không thể lấy tọa độ');
+                }
+            } catch (error) {
+                console.error('Lỗi khi lấy vị trí:', error);
+                document.getElementById('currentAddress').textContent = 'Không thể lấy vị trí';
+            }
+        }
+
+        // Hàm để tự động cập nhật vị trí định kỳ
+        function startLocationTracking() {
+            getCurrentLocation(); // Lấy vị trí ngay lập tức
+            setInterval(getCurrentLocation, 5 * 60 * 1000); // Cập nhật mỗi 5 phút
+        }
+
+        // Thêm hàm kiểm tra quyền truy cập vị trí
+        async function checkLocationPermission() {
+            try {
+                const result = await navigator.permissions.query({ name: 'geolocation' });
+                console.log('Trạng thái quyền vị trí:', result.state);
+                return result.state;
+            } catch (error) {
+                console.error('Lỗi khi kiểm tra quyền:', error);
+                return 'denied';
+            }
+        }
 
         const avatar = localStorage.getItem('avatar');
         const user = JSON.parse(localStorage.getItem('user'));
